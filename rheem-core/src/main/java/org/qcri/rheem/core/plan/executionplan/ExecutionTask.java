@@ -8,6 +8,9 @@ import org.qcri.rheem.core.plan.rheemplan.RheemPlan;
 import org.qcri.rheem.core.platform.ChannelDescriptor;
 import org.qcri.rheem.core.platform.Platform;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Serves as an adapter to include {@link ExecutionOperator}s, which are usually parts of {@link RheemPlan}s, in
  * {@link ExecutionPlan}s.
@@ -200,6 +203,22 @@ public class ExecutionTask {
             }
         }
         throw new IllegalArgumentException(String.format("%s does not belong to %s.", channel, this));
+    }
+
+    /**
+     * Returns the {@link InputSlot}s of the {@link ExecutionOperator} that are associated to the given {@link Channel}.
+     *
+     * @return the {@link InputSlot}s
+     */
+    public List<InputSlot<?>> getInputSlotsFor(Channel channel) {
+        // Simple implementation: linear search.
+        List<InputSlot<?>> inputSlots = new ArrayList<>(this.getNumInputChannels());
+        for (int inputIndex = 0; inputIndex < Math.min(this.getNumInputChannels(), this.getOperator().getNumInputs()); inputIndex++) {
+            if (this.getInputChannel(inputIndex) == channel) {
+                inputSlots.add(this.getOperator().getInput(inputIndex));
+            }
+        }
+        return inputSlots;
     }
 
     /**

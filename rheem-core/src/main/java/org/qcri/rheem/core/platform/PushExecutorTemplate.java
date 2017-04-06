@@ -272,18 +272,25 @@ public abstract class PushExecutorTemplate extends ExecutorTemplate {
         public void accept(ChannelInstance inputChannelInstance) {
             // Identify the input index of the inputChannelInstance wrt. the ExecutionTask.
             final Channel channel = inputChannelInstance.getChannel();
-            final int inputIndex;
+            int inputIndex;
             if (this.task.getOperator().getNumInputs() == 0) {
                 // If we have a ChannelInstance but no InputSlots, we fall-back to index 0 as per convention.
                 assert this.inputChannelInstances.isEmpty();
                 this.inputChannelInstances.add(null);
                 inputIndex = 0;
-            } else {
-                final InputSlot<?> inputSlot = this.task.getInputSlotFor(channel);
-                assert inputSlot != null
-                        : String.format("Could not identify an InputSlot in %s for %s.", this.task, inputChannelInstance);
-                inputIndex = inputSlot.getIndex();
 
+            } else {
+                final List<InputSlot<?>> inputSlots = this.task.getInputSlotsFor(channel);
+                assert !inputSlots.isEmpty()
+                        : String.format("Could not identify an InputSlot in %s for %s.", this.task, inputChannelInstance);
+                inputIndex = -1;
+                for (InputSlot<?> inputSlot : inputSlots) {
+                    if (this.inputChannelInstances.get(inputSlot.getIndex()) == null) {
+                        inputIndex = inputSlot.getIndex();
+                        break;
+                    }
+                }
+                assert inputIndex != -1;
             }
             // Register the inputChannelInstance (and check for conflicts).
             assert this.inputChannelInstances.get(inputIndex) == null

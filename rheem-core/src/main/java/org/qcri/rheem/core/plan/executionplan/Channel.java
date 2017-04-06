@@ -87,11 +87,13 @@ public abstract class Channel {
      * @param inputIndex the input index for this instance into the consumer
      */
     public void addConsumer(ExecutionTask consumer, int inputIndex) {
-        if (!this.consumers.contains(consumer)) {
+        // Check that the given consumer is not already registered.
+        if (!Objects.equals(consumer.getInputChannel(inputIndex), this)) {
+            assert consumer.getInputChannel(inputIndex) == null;
             assert this.isReusable() || this.consumers.isEmpty() :
                     String.format("Cannot add %s as consumer of non-reusable %s, there is already %s.",
                             consumer, this, this.consumers);
-            this.consumers.add(consumer);
+            if (!this.consumers.contains(consumer)) this.consumers.add(consumer);
             consumer.setInputChannel(inputIndex, this);
         }
     }

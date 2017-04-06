@@ -2,6 +2,8 @@ package org.qcri.rheem.tests;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.qcri.rheem.api.JavaPlanBuilder;
+import org.qcri.rheem.api.LoadCollectionDataQuantaBuilder;
 import org.qcri.rheem.basic.RheemBasics;
 import org.qcri.rheem.basic.data.Tuple2;
 import org.qcri.rheem.basic.operators.CollectionSource;
@@ -504,5 +506,21 @@ public class JavaIntegrationIT {
 
         Collections.sort(collectedValues);
         Assert.assertEquals(expectedValues, collectedValues);
+    }
+
+
+    @Test
+    public void testTightBroadcast() {
+        RheemContext rheemContext = new RheemContext().with(Java.basicPlugin());
+        JavaPlanBuilder javaPlanBuilder = new JavaPlanBuilder(rheemContext);
+
+        LoadCollectionDataQuantaBuilder<Integer> inputDataQuanta =
+                javaPlanBuilder.loadCollection(Arrays.asList(1, 2, 3));
+        Collection<Integer> result = inputDataQuanta
+                .map(x -> x + 1)
+                .withBroadcast(inputDataQuanta, "inputDataQuanta")
+                .collect();
+
+        Assert.assertEquals(RheemCollections.asSet(2, 3, 4), RheemCollections.asSet(result));
     }
 }
