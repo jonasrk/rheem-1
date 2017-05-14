@@ -9,6 +9,7 @@ import org.qcri.rheem.core.platform.ChannelInstance;
 import org.qcri.rheem.core.util.RheemArrays;
 import org.qcri.rheem.core.util.RheemCollections;
 import org.qcri.rheem.java.channels.CollectionChannel;
+import org.qcri.rheem.java.channels.StreamChannel;
 import org.qcri.rheem.java.execution.JavaExecutor;
 import org.qcri.rheem.java.operators.JavaExecutionOperator;
 import org.qcri.rheem.profiler.util.ProfilingUtils;
@@ -37,9 +38,11 @@ public abstract class OperatorProfiler {
 
     protected JavaExecutor executor;
 
-    protected final List<Supplier<?>> dataQuantumGenerators;
+    protected List<Supplier<?>> dataQuantumGenerators;
 
     private List<Long> inputCardinalities;
+
+    private long dataQuantaSize;
 
     public OperatorProfiler(Supplier<JavaExecutionOperator> operatorGenerator,
                             Supplier<?>... dataQuantumGenerators) {
@@ -50,9 +53,10 @@ public abstract class OperatorProfiler {
     }
 
 
-    public void prepare(long... inputCardinalities) {
+    public void prepare(long dataQuantaSize,long... inputCardinalities) {
         this.operator = this.operatorGenerator.get();
         this.inputCardinalities = RheemArrays.asList(inputCardinalities);
+        this.dataQuantaSize = dataQuantaSize;
     }
 
 
@@ -73,7 +77,8 @@ public abstract class OperatorProfiler {
                 outputCardinality,
                 this.provideDiskBytes(),
                 this.provideNetworkBytes(),
-                cpuCycles
+                cpuCycles,
+                this.dataQuantaSize
         );
     }
 
@@ -96,13 +101,25 @@ public abstract class OperatorProfiler {
      */
     protected abstract long executeOperator();
 
-    protected static CollectionChannel.Instance createChannelInstance(final Collection<?> collection) {
-        final CollectionChannel.Instance channelInstance = createChannelInstance();
+    protected static StreamChannel.Instance createChannelInstance(final Collection<?> collection) {
+        final StreamChannel.Instance channelInstance = createChannelInstance();
         channelInstance.accept(collection);
         return channelInstance;
     }
 
-    protected static CollectionChannel.Instance createChannelInstance() {
+    protected static StreamChannel.Instance createChannelInstance() {
+        final ChannelDescriptor channelDescriptor = StreamChannel.DESCRIPTOR;
+        final Channel channel = channelDescriptor.createChannel(null, new Configuration());
+        return (StreamChannel.Instance) channel.createInstance(null, null, -1);
+    }
+
+    protected static CollectionChannel.Instance createCollectionChannelInstance(final Collection<?> collection) {
+        final CollectionChannel.Instance channelInstance = createCollectionChannelInstance();
+        channelInstance.accept(collection);
+        return channelInstance;
+    }
+
+    protected static CollectionChannel.Instance createCollectionChannelInstance() {
         final ChannelDescriptor channelDescriptor = CollectionChannel.DESCRIPTOR;
         final Channel channel = channelDescriptor.createChannel(null, new Configuration());
         return (CollectionChannel.Instance) channel.createInstance(null, null, -1);
@@ -110,6 +127,10 @@ public abstract class OperatorProfiler {
 
     public JavaExecutionOperator getOperator() {
         return this.operator;
+    }
+
+    public void setDataQuantumGenerators(Supplier<?> dataQuantumGenerators) {
+        this.dataQuantumGenerators = Arrays.asList(dataQuantumGenerators);
     }
 
     /**
@@ -136,12 +157,15 @@ public abstract class OperatorProfiler {
 
         private final long cpuCycles;
 
-        public Result(List<Long> inputCardinalities, long outputCardinality, long diskBytes, long networkBytes, long cpuCycles) {
+        private final long dataQuantaSize;
+
+        public Result(List<Long> inputCardinalities, long outputCardinality, long diskBytes, long networkBytes, long cpuCycles, long dataQuantaSize) {
             this.inputCardinalities = inputCardinalities;
             this.outputCardinality = outputCardinality;
             this.diskBytes = diskBytes;
             this.networkBytes = networkBytes;
             this.cpuCycles = cpuCycles;
+            this.dataQuantaSize = dataQuantaSize;
         }
 
         public List<Long> getInputCardinalities() {
@@ -180,7 +204,8 @@ public abstract class OperatorProfiler {
                     "output_card," +
                     "disk," +
                     "network," +
-                    "cpu";
+                    "cpu," +
+                    "dataQuanta_size";
         }
 
         public String toCsvString() {
@@ -188,7 +213,8 @@ public abstract class OperatorProfiler {
                     + this.outputCardinality + ","
                     + this.diskBytes + ","
                     + this.networkBytes + ","
-                    + this.cpuCycles;
+                    + this.cpuCycles + ","
+                    + this.dataQuantaSize;
         }
     }
 

@@ -1,10 +1,16 @@
 package org.qcri.rheem.profiler.java;
 
 import org.apache.commons.lang3.Validate;
+import org.qcri.rheem.core.plan.rheemplan.Operator;
 import org.qcri.rheem.java.channels.JavaChannelInstance;
+import org.qcri.rheem.java.operators.JavaCollectionSource;
 import org.qcri.rheem.java.operators.JavaExecutionOperator;
+import org.qcri.rheem.java.operators.JavaTextFileSource;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -19,7 +25,7 @@ public abstract class SourceProfiler extends OperatorProfiler {
     }
 
     @Override
-    public void prepare(long... inputCardinalities) {
+    public void prepare(long dataQuantaSize,long... inputCardinalities) {
         Validate.isTrue(inputCardinalities.length == 1);
 
         try {
@@ -31,9 +37,19 @@ public abstract class SourceProfiler extends OperatorProfiler {
             );
         }
 
-        super.prepare(inputCardinalities);
+        super.prepare(dataQuantaSize, inputCardinalities);
 
-        this.outputChannelInstance = createChannelInstance();
+        // Channel creation separation between operators that requires Collection channels vs Stream channels for the evaluation.
+        List operatorsWithCollectionInput = new ArrayList<Class<Operator>>();
+
+        // List of operators requiring collection channels.
+        operatorsWithCollectionInput.addAll(Arrays.asList(JavaTextFileSource.class));
+
+        if (operatorsWithCollectionInput.contains(this.operator.getClass())) {
+            this.outputChannelInstance = createChannelInstance();
+        } else {
+            this.outputChannelInstance = createCollectionChannelInstance();
+        }
     }
 
     abstract void setUpSourceData(long cardinality) throws Exception;

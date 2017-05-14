@@ -774,6 +774,15 @@ public class Job extends OneTimeExecutable {
         return this.crossPlatformExecutor;
     }
 
+    /**
+     * Set the {@link CrossPlatformExecutor} to be used during the execution of this instance.
+     *
+     * @return the {@link CrossPlatformExecutor} or {@code null} if there is none allocated
+     */
+    public void setCrossPlatformExecutor(CrossPlatformExecutor crossPlatformExecutor) {
+        this.crossPlatformExecutor = crossPlatformExecutor;
+    }
+
     public DefaultOptimizationContext getOptimizationContext() {
         return this.optimizationContext;
     }

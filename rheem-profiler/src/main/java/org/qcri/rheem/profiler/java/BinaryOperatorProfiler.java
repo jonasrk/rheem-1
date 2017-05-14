@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.function.Supplier;
 
 /**
- * {@link OperatorProfiler} specifically for {@link JavaExecutionOperator}s with a single {@link InputSlot}.
+ * {@link OperatorProfiler} specifically for {@link JavaExecutionOperator}s with double {@link InputSlot}.
  */
 public class BinaryOperatorProfiler extends OperatorProfiler {
 
@@ -21,10 +21,10 @@ public class BinaryOperatorProfiler extends OperatorProfiler {
         super(operatorGenerator, dataQuantumGenerator0, dataQuantumGenerator1);
     }
 
-    public void prepare(long... inputCardinalities) {
+    public void prepare(long dataQuantaSize, long... inputCardinalities) {
         assert inputCardinalities.length == 2;
 
-        super.prepare(inputCardinalities);
+        super.prepare(dataQuantaSize, inputCardinalities);
 
         // Create operator.
         assert inputCardinalities.length == this.operator.getNumInputs();
@@ -37,14 +37,14 @@ public class BinaryOperatorProfiler extends OperatorProfiler {
         for (int i = 0; i < inputCardinality0; i++) {
             dataQuanta0.add(supplier0.get());
         }
-        this.inputChannelInstance0 = createChannelInstance(dataQuanta0);
+        this.inputChannelInstance0 = createCollectionChannelInstance(dataQuanta0);
 
         Collection<Object> dataQuanta1 = new ArrayList<>(inputCardinality1);
         final Supplier<?> supplier1 = this.dataQuantumGenerators.get(1);
         for (int i = 0; i < inputCardinality1; i++) {
             dataQuanta1.add(supplier1.get());
         }
-        this.inputChannelInstance1 = createChannelInstance(dataQuanta1);
+        this.inputChannelInstance1 = createCollectionChannelInstance(dataQuanta1);
 
         // Allocate output.
         this.outputChannelInstance = createChannelInstance();

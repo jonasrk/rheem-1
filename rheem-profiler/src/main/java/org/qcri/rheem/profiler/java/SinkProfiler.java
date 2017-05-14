@@ -20,10 +20,10 @@ public class SinkProfiler extends OperatorProfiler {
     }
 
     @Override
-    public void prepare(long... inputCardinalities) {
+    public void prepare(long dataQuantaSize, long... inputCardinalities) {
         Validate.isTrue(inputCardinalities.length == 1);
 
-        super.prepare(inputCardinalities);
+        super.prepare(dataQuantaSize, inputCardinalities);
         int inputCardinality = (int) inputCardinalities[0];
 
         // Create input data.

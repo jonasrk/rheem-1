@@ -14,11 +14,22 @@ public class DataGenerators {
 
     private static final String[] CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".split("");
 
+    /**
+     *  Create a random string with reuse probability
+     * @param stringReservoir
+     * @param reuseProbability
+     * @param random
+     * @param minLen
+     * @param maxLen
+     * @return
+     */
     public static Generator<String> createReservoirBasedStringSupplier(List<String> stringReservoir,
                                                                       double reuseProbability,
                                                                       Random random,
                                                                       int minLen,
                                                                       int maxLen) {
+        //this.rand = random;
+        //this.rand = random;
         return () -> {
             if (random.nextDouble() > reuseProbability || stringReservoir.isEmpty()) {
                 final String randomString = createRandomString(minLen, maxLen, random);
@@ -34,6 +45,13 @@ public class DataGenerators {
         return () -> createRandomString(minLen, maxLen, random);
     }
 
+    /**
+     * Create a Random string with the below parameters
+     * @param minLen
+     * @param maxLen
+     * @param random
+     * @return
+     */
     private static String createRandomString(int minLen, int maxLen, Random random) {
         int len = (minLen == maxLen) ? minLen : (random.nextInt(maxLen - minLen) + minLen);
         StringBuilder sb = new StringBuilder(len);
@@ -43,6 +61,13 @@ public class DataGenerators {
         return sb.toString();
     }
 
+    /**
+     *
+     * @param reservoir
+     * @param reuseProbability
+     * @param random
+     * @return
+     */
     public static Generator<Integer> createReservoirBasedIntegerSupplier(List<Integer> reservoir,
                                                                         double reuseProbability,
                                                                         Random random) {
@@ -67,6 +92,11 @@ public class DataGenerators {
     }
 
     public interface Generator<T> extends Supplier<T>, Serializable {
+        Random rand = new Random();
+
+        public default void setRandom(Random random){
+            //rand = random;
+        }
     }
 
 }

@@ -3,6 +3,8 @@ package org.qcri.rheem.profiler.util;
 import org.qcri.rheem.core.api.Job;
 import org.qcri.rheem.core.api.RheemContext;
 import org.qcri.rheem.core.plan.rheemplan.RheemPlan;
+import org.qcri.rheem.core.platform.CrossPlatformExecutor;
+import org.qcri.rheem.core.profiling.InstrumentationStrategy;
 import org.qcri.rheem.core.util.Formats;
 import org.qcri.rheem.core.util.ReflectionUtils;
 import org.qcri.rheem.java.execution.JavaExecutor;
@@ -25,7 +27,12 @@ public class ProfilingUtils {
      * @param udfJars paths to JAR files needed to run the UDFs (see {@link ReflectionUtils#getDeclaringJar(Class)})
      */
     public static Job fakeJob(String... udfJars) {
-        return new RheemContext().createJob("Fake job", new RheemPlan(), udfJars);
+        // Create a fake job for a single operator profiling
+        Job fakeJob =  new RheemContext().createJob("Fake job", new RheemPlan(), udfJars);
+        final InstrumentationStrategy instrumentation = fakeJob.getConfiguration().getInstrumentationStrategyProvider().provide();
+        // Add cross platform execution to the fake job
+        fakeJob.setCrossPlatformExecutor( new CrossPlatformExecutor(fakeJob, instrumentation));
+        return fakeJob;
     }
 
     /**
